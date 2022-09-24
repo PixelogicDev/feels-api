@@ -1,6 +1,8 @@
-require('dotenv').config();
+import * as dotenv from 'dotenv';
+import * as axiosLib from 'axios';
 import FormData from 'form-data';
-const axios = require('axios').default;
+const axios = axiosLib.default;
+dotenv.config();
 
 //-- Holds all of our helper functions for Spotify --//
 const BASE_URI = 'https://api.spotify.com/v1';
@@ -72,7 +74,7 @@ const getAllPlaylists = async (accessToken) => {
   }
 };
 
-const getLatestFeelsPlaylist = async () => {
+export const getLatestFeelsPlaylist = async () => {
   // Get access token from spotify
   const accessToken = await getAccessToken();
 
@@ -106,8 +108,4 @@ const getLatestFeelsPlaylist = async () => {
     console.log('accessToken is borked loser');
     return;
   }
-};
-
-module.exports = {
-  getLatestFeelsPlaylist: getLatestFeelsPlaylist,
 };

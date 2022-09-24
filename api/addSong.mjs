@@ -1,4 +1,4 @@
-import { getLatestFeelsPlaylist } from './helpers/spotify';
+import { getLatestFeelsPlaylist } from './helpers/spotify.mjs';
 
 const addSong = async (req, res) => {
   // "try catch deez nuts" - rushkiB [09.24.22]
@@ -16,7 +16,7 @@ const addSong = async (req, res) => {
     const data = {
       playlist: {
         name: currentPlaylist.name,
-        currentPlaylist.uri,
+        uri: currentPlaylist.uri,
       },
     };
 
