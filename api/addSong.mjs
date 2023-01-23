@@ -37,9 +37,12 @@ const addSong = async (req, res) => {
     res.statusCode = 200;
     res.json({ data });
   } catch (error) {
+    // TODO: Return error!
     console.log('Ah shit.');
     if (error.response && error.response.data) {
       console.log(error.response.data);
+      res.statusCode = 500;
+      res.json({ error: error.response.data });
     } else {
       console.log(error);
     }
