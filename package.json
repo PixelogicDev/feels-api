@@ -15,6 +15,8 @@
   "homepage": "https://github.com/PixelogicDev/feels-api#readme",
   "dependencies": {
     "axios": "^0.27.2",
-    "dotenv": "^16.0.2"
+    "dotenv": "^16.0.2",
+    "openai": "^3.1.0",
+    "puppeteer": "^19.6.0"
   }
 }
