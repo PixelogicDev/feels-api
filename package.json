@@ -1,0 +1,22 @@
+{
+  "name": "feels-api",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PixelogicDev/feels-api.git"
+  },
+  "author": "PixelogicDev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PixelogicDev/feels-api/issues"
+  },
+  "homepage": "https://github.com/PixelogicDev/feels-api#readme",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "dotenv": "^16.0.2",
+    "openai": "^3.1.0",
+    "puppeteer": "^19.6.0"
+  }
+}
