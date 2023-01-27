@@ -80,7 +80,6 @@ export const getAllFeelsPlaylists = async () => {
       const { name } = playlist;
       const playlistNameToLower = name.toLowerCase();
       const target = 'weekly feels';
-      console.log(`Checking ${playlistNameToLower}`);
       return playlistNameToLower.includes(target);
     });
 
@@ -175,7 +174,6 @@ const getAllPlaylists = async () => {
       }
     } while (nextURI);
 
-    console.log(`Number of items in array: ${playlistItems.length}`);
     return playlistItems;
   } catch (error) {
     if (error.response && error.response.data) {
@@ -200,11 +198,8 @@ export const getLatestFeelsPlaylist = async () => {
     const { name } = playlist;
     const playlistNameToLower = name.toLowerCase();
     const target = 'weekly feels';
-    console.log(`Checking ${playlistNameToLower}`);
     return playlistNameToLower.includes(target);
   });
-
-  console.log(`Number of weekly feels: ${weeklyFeelsPlaylists.length}`);
 
   // Sort and grab the latest off the top
   weeklyFeelsPlaylists.sort((p1, p2) => {

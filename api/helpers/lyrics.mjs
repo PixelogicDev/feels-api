@@ -4,6 +4,8 @@ import puppeteer from 'puppeteer';
 const axios = axiosLib.default;
 dotenv.config();
 
+const IS_ON_PLANE = true;
+
 //-- Holds all of our helper functions for Genius --//
 const BASE_URI = 'https://api.genius.com';
 
@@ -13,7 +15,7 @@ const scrape = async (path) => {
   const page = await browser.newPage();
 
   // go to path passed int
-  await page.goto(path);
+  await page.goto(path, IS_ON_PLANE ? { waitUntil: 'load', timeout: 0 } : {});
   const element = await page.waitForSelector(
     '#lyrics-root > div.Lyrics__Container-sc-1ynbvzw-6.YYrds'
   );
@@ -57,6 +59,11 @@ export const getLyrics = async (trackName, artists) => {
     }
 
     const topHit = result.data.response.hits.shift();
+
+    if (!topHit || !topHit.result) {
+      console.log('no top hit so no lyrics');
+      return;
+    }
 
     // scrape from puppeteer + return
     const lyrics = await scrape(topHit.result.url);

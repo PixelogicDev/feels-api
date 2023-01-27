@@ -2,6 +2,32 @@ import { getAllFeelsPlaylists, getPlaylistItems } from './helpers/spotify.mjs';
 import { getLyrics } from './helpers/lyrics.mjs';
 import { runGPT3Analysis } from './helpers/openai.mjs';
 
+const runAnalysisOnItem = async (item) => {
+  // Grab track title and artist
+  const {
+    track: { name: trackName, artists },
+  } = item;
+
+  const mainArtist = artists.shift();
+
+  // Get lyrics
+  const lyrics = await getLyrics(trackName, mainArtist.name);
+
+  if (!lyrics) {
+    console.log(
+      `lyrics could not be found for ${trackName} ${mainArtist.name}.`
+    );
+
+    return;
+  }
+
+  // Take lyrics and run through GPT-3
+  const analysis = await runGPT3Analysis(lyrics);
+
+  // return { [`${trackName}+${mainArtist.name}`]: analysis };
+  return analysis;
+};
+
 const runSentiment = async (req, res) => {
   try {
     console.log('Calling runSentiment endpoint');
@@ -25,35 +51,26 @@ const runSentiment = async (req, res) => {
     // Get all songs per playlist
     const items = await getPlaylistItems(one.id);
 
-    // Get song title + artist name
-    const analysisPromises = await items.map(async (item) => {
-      const {
-        track: { name: trackName, artists },
-      } = item;
-
-      const mainArtist = artists.shift();
-
-      // Get lyrics
-      const lyrics = await getLyrics(trackName, mainArtist.name);
-
-      if (!lyrics) {
-        console.log('lyrics could not be found.');
-        res.statusCode = 500;
-        res.json({
-          error: `lyrics could not be found for ${trackName} ${mainArtist.name}`,
-        });
-      }
-
-      // Take lyrics and run through GPT-3
-      const analysis = await runGPT3Analysis(lyrics);
-      return analysis;
-      // return { [`${trackName}+${mainArtist.name}`]: analysis };
+    // go through song items and get sentiment analysis
+    const analysisPromises = await items.map(async (item, index) => {
+      if (index % 2 === 0) return;
+      return await runAnalysisOnItem(item);
     });
 
-    const finalAnalysis = await Promise.all(analysisPromises);
+    const fulfilledAnalysis = await Promise.all(analysisPromises);
+
+    // filter out all the items that had no value
+    const filteredAnalysis = fulfilledAnalysis.filter((item) => !!item);
+
+    // request full sentiment from gpt3
+    const groupSentiment = await runGPT3Analysis(filteredAnalysis, isFinal: true);
+
+    // generate playlist description
+
+    // generate SD prompt
 
     res.statusCode = 200;
-    res.json({ finalAnalysis });
+    res.json({ groupSentiment });
   } catch (error) {
     // TODO: Return error!
     console.log('Ah shit.');
