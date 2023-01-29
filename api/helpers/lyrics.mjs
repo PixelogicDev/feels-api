@@ -4,21 +4,21 @@ import puppeteer from 'puppeteer';
 const axios = axiosLib.default;
 dotenv.config();
 
-const IS_ON_PLANE = true;
+const IS_ON_PLANE = false;
 
 //-- Holds all of our helper functions for Genius --//
 const BASE_URI = 'https://api.genius.com';
 
-const scrape = async (path) => {
-  // initiate web browser
-  const browser = await puppeteer.launch({});
-  const page = await browser.newPage();
+const scrape = async (path, page) => {
+  console.time('[⏰] scraping');
 
-  // go to path passed int
+  // go to path passed
   await page.goto(path, IS_ON_PLANE ? { waitUntil: 'load', timeout: 0 } : {});
   const element = await page.waitForSelector(
     '#lyrics-root > div.Lyrics__Container-sc-1ynbvzw-6.YYrds'
   );
+
+  console.timeEnd('[⏰] scraping');
 
   if (!element) {
     console.log('cant find selector');
@@ -26,12 +26,11 @@ const scrape = async (path) => {
   }
 
   const text = await page.evaluate((element) => element.textContent, element);
-  browser.close();
 
   return text;
 };
 
-export const getLyrics = async (trackName, artists) => {
+export const getLyrics = async (trackName, artists, page) => {
   try {
     console.log('getting lyrics for:', trackName, artists);
 
@@ -54,7 +53,7 @@ export const getLyrics = async (trackName, artists) => {
     });
 
     if (!result.data.response || !result.data.response.hits) {
-      console.log(`couldnt find lyrics for ${trackName} ${artists}`);
+      console.log(`couldn't find lyrics for ${trackName} ${artists}`);
       return;
     }
 
@@ -66,10 +65,11 @@ export const getLyrics = async (trackName, artists) => {
     }
 
     // scrape from puppeteer + return
-    const lyrics = await scrape(topHit.result.url);
+    const lyrics = await scrape(topHit.result.url, page);
 
     return lyrics;
   } catch (error) {
+    console.timeEnd('[⏰] scraping');
     if (error.response && error.response.data) {
       console.log(`[getLyrics] ${JSON.stringify(error.response.data)}`);
     } else {

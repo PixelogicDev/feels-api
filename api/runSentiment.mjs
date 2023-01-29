@@ -1,8 +1,9 @@
-import { getAllFeelsPlaylists, getPlaylistItems } from './helpers/spotify.mjs';
+import puppeteer from 'puppeteer';
+import { getPlaylistItems } from './helpers/spotify.mjs';
 import { getLyrics } from './helpers/lyrics.mjs';
 import { runGPT3Analysis } from './helpers/openai.mjs';
 
-const runAnalysisOnItem = async (item) => {
+const runItemAnalysis = async (item, page) => {
   // Grab track title and artist
   const {
     track: { name: trackName, artists },
@@ -11,7 +12,7 @@ const runAnalysisOnItem = async (item) => {
   const mainArtist = artists.shift();
 
   // Get lyrics
-  const lyrics = await getLyrics(trackName, mainArtist.name);
+  const lyrics = await getLyrics(trackName, mainArtist.name, page);
 
   if (!lyrics) {
     console.log(
@@ -22,48 +23,76 @@ const runAnalysisOnItem = async (item) => {
   }
 
   // Take lyrics and run through GPT-3
+  console.time('[⏰] gpt3Analysis');
   const analysis = await runGPT3Analysis(lyrics);
+  console.timeEnd('[⏰] gpt3Analysis');
 
   // return { [`${trackName}+${mainArtist.name}`]: analysis };
   return analysis;
 };
 
+const getBrowserPage = async (browser) => {
+  const page = await browser.newPage();
+
+  // setup listeners
+  await page.setRequestInterception(true);
+  page.on('request', (req) => {
+    if (
+      req.resourceType() == 'stylesheet' ||
+      req.resourceType() == 'font' ||
+      req.resourceType() == 'image'
+    ) {
+      req.abort();
+    } else {
+      req.continue();
+    }
+  });
+
+  return page;
+};
+
+// pay wall here can be max 25 songs
+// will need to run a much larger token value on gpt3 + make a lot more requests to genius api
 const runSentiment = async (req, res) => {
   try {
     console.log('Calling runSentiment endpoint');
 
-    // There is going to be tons of playlists here (100+), let's get all playlists here and then can loop through
+    // Get playlist object
+    const { playlist } = req.body;
 
-    // Get latest playlist in list from Spotify
-    const feelsPlaylists = await getAllFeelsPlaylists();
-
-    if (feelsPlaylists.length === 0) {
-      throw new Error('current playlist did not return.');
-    }
-
-    console.log('playlists received:', feelsPlaylists.length);
-
-    // Used to test on 1 rn
-    const one = feelsPlaylists.pop();
-
-    console.log(`starting analysis on: ${one.name}`);
+    console.log(`starting analysis on: ${playlist.name}`);
 
     // Get all songs per playlist
-    const items = await getPlaylistItems(one.id);
+    const items = await getPlaylistItems(playlist.id);
 
     // go through song items and get sentiment analysis
-    const analysisPromises = await items.map(async (item, index) => {
-      if (index % 2 === 0) return;
-      return await runAnalysisOnItem(item);
+    const songSentiments = [];
+
+    // lets init a browser page here and then we can pass it
+    console.time('[⏰] startBrowser');
+
+    // set page size
+    const browser = await puppeteer.launch({
+      headless: true,
     });
 
-    const fulfilledAnalysis = await Promise.all(analysisPromises);
+    const page = await getBrowserPage(browser);
 
-    // filter out all the items that had no value
-    const filteredAnalysis = fulfilledAnalysis.filter((item) => !!item);
+    console.timeEnd('[⏰] startBrowser');
+
+    for await (const item of items) {
+      const sentiment = await runItemAnalysis(item, page);
+
+      console.log(`finished sentiment`);
+
+      songSentiments.push(sentiment);
+    }
+
+    // clean up browser
+    browser.close();
 
     // request full sentiment from gpt3
-    const groupSentiment = await runGPT3Analysis(filteredAnalysis, isFinal: true);
+    const groupSentiment = await runGPT3Analysis(songSentiments, true);
 
     // generate playlist description
 
