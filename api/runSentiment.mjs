@@ -19,7 +19,7 @@ const runItemAnalysis = async (item, page) => {
       `lyrics could not be found for ${trackName} ${mainArtist.name}.`
     );
 
-    return;
+    return undefined;
   }
 
   // Take lyrics and run through GPT-3
@@ -80,6 +80,7 @@ const runSentiment = async (req, res) => {
 
     console.timeEnd('[⏰] startBrowser');
 
+    // eslint-disable-next-line no-restricted-syntax
     for await (const item of items) {
       const sentiment = await runItemAnalysis(item, page);
 

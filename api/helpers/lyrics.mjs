@@ -1,12 +1,11 @@
 import * as dotenv from 'dotenv';
 import * as axiosLib from 'axios';
-import puppeteer from 'puppeteer';
+
 const axios = axiosLib.default;
 dotenv.config();
 
 const IS_ON_PLANE = false;
 
-//-- Holds all of our helper functions for Genius --//
 const BASE_URI = 'https://api.genius.com';
 
 const scrape = async (path, page) => {
@@ -22,15 +21,16 @@ const scrape = async (path, page) => {
 
   if (!element) {
     console.log('cant find selector');
-    return;
+    return undefined;
   }
 
-  const text = await page.evaluate((element) => element.textContent, element);
+  const text = await page.evaluate((item) => item.textContent, element);
 
   return text;
 };
 
-export const getLyrics = async (trackName, artists, page) => {
+// eslint-disable-next-line consistent-return
+const getLyrics = async (trackName, artists, page) => {
   try {
     console.log('getting lyrics for:', trackName, artists);
 
@@ -54,14 +54,14 @@ export const getLyrics = async (trackName, artists, page) => {
 
     if (!result.data.response || !result.data.response.hits) {
       console.log(`couldn't find lyrics for ${trackName} ${artists}`);
-      return;
+      return undefined;
     }
 
     const topHit = result.data.response.hits.shift();
 
     if (!topHit || !topHit.result) {
       console.log('no top hit so no lyrics');
-      return;
+      return undefined;
     }
 
     // scrape from puppeteer + return
@@ -77,3 +77,5 @@ export const getLyrics = async (trackName, artists, page) => {
     }
   }
 };
+
+export default getLyrics;
