@@ -7,13 +7,12 @@ const fetchPlaylists = async (req, res) => {
     const feelsPlaylists = await getAllFeelsPlaylists();
 
     if (feelsPlaylists.length === 0) {
-      throw new Error('current playlist did not return.');
+      throw new Error('⚠️ no feels playlists were returned');
     }
 
     res.statusCode = 200;
     res.json({ playlists: feelsPlaylists });
   } catch (error) {
-    // TODO: Return error!
     console.log('Ah shit.');
     if (error.response && error.response.data) {
       console.log(error.response.data);

@@ -23,11 +23,10 @@ const runItemAnalysis = async (item, page) => {
   }
 
   // Take lyrics and run through GPT-3
-  console.time('[⏰] gpt3Analysis');
+  console.time('⏰ gpt3Analysis');
   const analysis = await runGPT3Analysis(lyrics);
-  console.timeEnd('[⏰] gpt3Analysis');
+  console.timeEnd('⏰ gpt3Analysis');
 
-  // return { [`${trackName}+${mainArtist.name}`]: analysis };
   return analysis;
 };
 
@@ -69,7 +68,7 @@ const runSentiment = async (req, res) => {
     const songSentiments = [];
 
     // lets init a browser page here and then we can pass it
-    console.time('[⏰] startBrowser');
+    console.time('⏰ startBrowser');
 
     // set page size
     const browser = await puppeteer.launch({
@@ -78,14 +77,13 @@ const runSentiment = async (req, res) => {
 
     const page = await getBrowserPage(browser);
 
-    console.timeEnd('[⏰] startBrowser');
+    console.timeEnd('⏰ startBrowser');
 
-    // eslint-disable-next-line no-restricted-syntax
     for await (const item of items) {
       const sentiment = await runItemAnalysis(item, page);
 
       console.log(`finished sentiment`);
-
+      console.log(sentiment);
       songSentiments.push(sentiment);
     }
 
@@ -93,14 +91,18 @@ const runSentiment = async (req, res) => {
     browser.close();
 
     // request full sentiment from gpt3
-    const groupSentiment = await runGPT3Analysis(songSentiments, true);
+    const playlistSentiment = await runGPT3Analysis(songSentiments, true);
 
     // generate playlist description
 
     // generate SD prompt
 
     res.statusCode = 200;
-    res.json({ groupSentiment });
+    res.json({
+      playlistName: playlist.name,
+      playlistId: playlist.id,
+      playlistSentiment,
+    });
   } catch (error) {
     // TODO: Return error!
     console.log('Ah shit.');

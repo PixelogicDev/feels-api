@@ -4,33 +4,37 @@ import * as axiosLib from 'axios';
 const axios = axiosLib.default;
 dotenv.config();
 
-const IS_ON_PLANE = false;
+const IS_ON_PLANE = true;
 
 const BASE_URI = 'https://api.genius.com';
 
 const scrape = async (path, page) => {
-  console.time('[⏰] scraping');
+  console.time('⏰ scraping');
 
   // go to path passed
-  await page.goto(path, IS_ON_PLANE ? { waitUntil: 'load', timeout: 0 } : {});
+  await page.goto(
+    path,
+    IS_ON_PLANE
+      ? { waitUntil: 'load', timeout: 0 }
+      : { waitUntil: 'load', timeout: 15000 }
+  );
   const element = await page.waitForSelector(
     '#lyrics-root > div.Lyrics__Container-sc-1ynbvzw-6.YYrds'
   );
 
-  console.timeEnd('[⏰] scraping');
+  console.timeEnd('⏰ scraping');
 
   if (!element) {
     console.log('cant find selector');
     return undefined;
   }
 
-  const text = await page.evaluate((item) => item.textContent, element);
-
-  return text;
+  // better text formatting?
+  return await page.evaluate((item) => item.textContent, element);
 };
 
 // eslint-disable-next-line consistent-return
-const getLyrics = async (trackName, artists, page) => {
+export const getLyrics = async (trackName, artists, page) => {
   try {
     console.log('getting lyrics for:', trackName, artists);
 
@@ -69,7 +73,7 @@ const getLyrics = async (trackName, artists, page) => {
 
     return lyrics;
   } catch (error) {
-    console.timeEnd('[⏰] scraping');
+    console.timeEnd('⏰ scraping');
     if (error.response && error.response.data) {
       console.log(`[getLyrics] ${JSON.stringify(error.response.data)}`);
     } else {
@@ -77,5 +81,3 @@ const getLyrics = async (trackName, artists, page) => {
     }
   }
 };
-
-export default getLyrics;
