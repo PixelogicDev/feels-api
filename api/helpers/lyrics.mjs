@@ -4,7 +4,7 @@ import * as axiosLib from 'axios';
 const axios = axiosLib.default;
 dotenv.config();
 
-const IS_ON_PLANE = true;
+const IS_ON_PLANE = false;
 
 const BASE_URI = 'https://api.genius.com';
 
@@ -19,7 +19,8 @@ const scrape = async (path, page) => {
       : { waitUntil: 'load', timeout: 15000 }
   );
   const element = await page.waitForSelector(
-    '#lyrics-root > div.Lyrics__Container-sc-1ynbvzw-6.YYrds'
+    '#lyrics-root > div:nth-child(3)'
+    // '#lyrics-root > div.Lyrics__Container-sc-1ynbvzw-6.YYrds'
   );
 
   console.timeEnd('⏰ scraping');

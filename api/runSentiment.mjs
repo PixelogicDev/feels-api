@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer';
-import { getPlaylistItems } from './helpers/spotify.mjs';
+import { getPlaylist, getPlaylistItems } from './helpers/spotify.mjs';
 import { getLyrics } from './helpers/lyrics.mjs';
 import { runGPT3Analysis } from './helpers/openai.mjs';
 
@@ -57,12 +57,15 @@ const runSentiment = async (req, res) => {
     console.log('Calling runSentiment endpoint');
 
     // Get playlist object
-    const { playlist } = req.body;
+    const { playlist } = JSON.parse(req.body);
 
-    console.log(`starting analysis on: ${playlist.name}`);
+    // Fetch playlist
+    const playlistData = await getPlaylist(playlist);
+
+    console.log(`starting analysis on: ${playlistData.name}`);
 
     // Get all songs per playlist
-    const items = await getPlaylistItems(playlist.id);
+    const items = await getPlaylistItems(playlistData.id);
 
     // go through song items and get sentiment analysis
     const songSentiments = [];
@@ -91,7 +94,13 @@ const runSentiment = async (req, res) => {
     browser.close();
 
     // request full sentiment from gpt3
-    const playlistSentiment = await runGPT3Analysis(songSentiments, true);
+    const filteredSongSentiments = songSentiments.filter(
+      (sentiment) => !!sentiment
+    );
+    const playlistSentiment = await runGPT3Analysis(
+      filteredSongSentiments,
+      true
+    );
 
     // generate playlist description
 
@@ -108,11 +117,12 @@ const runSentiment = async (req, res) => {
     console.log('Ah shit.');
     if (error.response && error.response.data) {
       console.log(error.response.data);
-      res.statusCode = 500;
       res.json({ error: error.response.data });
     } else {
       console.log(error);
     }
+    res.statusCode = 500;
+    res.json({});
   }
 };
 

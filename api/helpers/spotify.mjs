@@ -35,6 +35,66 @@ const getAccessToken = async () => {
   }
 };
 
+export const getPlaylist = async (playlistLink) => {
+  try {
+    console.log('fetching playlist:', playlistLink);
+
+    const accessToken = await getAccessToken();
+
+    if (!accessToken) {
+      return;
+    }
+
+    if (!playlistLink) {
+      console.log('playlist link not supplied');
+      return;
+    }
+
+    // get playlistId (https://open.spotify.com/playlist/2YEIhsgebIevCZLAQc4dLi?si=c4794e4fcc924e4a)
+    const playlistLinkSplit = playlistLink.split('/');
+
+    console.log(playlistLinkSplit);
+
+    // get index of playlist
+    const playlistIndex = playlistLinkSplit.indexOf('playlist');
+
+    if (playlistIndex === -1) {
+      console.log('could not find index of playlist keyworld');
+      return;
+    }
+
+    const playlistIdString = playlistLinkSplit[playlistIndex + 1];
+    console.log(playlistIdString);
+
+    const finalPlaylistId = playlistIdString.split('?').shift();
+    console.log(finalPlaylistId);
+
+    // call api lol
+    const response = await axios({
+      method: 'get',
+      url: `https://api.spotify.com/v1/playlists/${finalPlaylistId}`,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Check for next object, if here call again
+    if (!response.data) {
+      console.log('no data provided');
+      return;
+    }
+
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log(`[getAllPlaylists] ${JSON.stringify(error.response.data)}`);
+    } else {
+      console.log(error);
+    }
+  }
+};
+
 export const getAllFeelsPlaylists = async () => {
   try {
     const { SPOTIFY_USER_ID } = process.env;
