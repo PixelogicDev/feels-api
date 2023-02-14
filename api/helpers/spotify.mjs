@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv';
 import * as axiosLib from 'axios';
 import FormData from 'form-data';
+import { log } from './utils.mjs';
 const axios = axiosLib.default;
 dotenv.config();
 
@@ -192,6 +193,63 @@ export const getPlaylistItems = async (playlistID) => {
   } catch (error) {
     if (error.response && error.response.data) {
       console.log(`[getPlaylistItems] ${JSON.stringify(error.response.data)}`);
+    } else {
+      console.log(error);
+    }
+  }
+};
+
+export const searchForItem = async (query) => {
+  try {
+    // lets break song title and artist
+    log('searchForItem', query);
+
+    if (!query) {
+      log('searchForItem', 'query not supplied');
+      return;
+    }
+
+    const accessToken = await getAccessToken();
+
+    if (!accessToken) {
+      throw new Error('access token not created');
+      return;
+    }
+
+    const querySplit = query.split('_');
+    const trackName = querySplit[0];
+    const artistName = querySplit[1];
+    console.log(trackName, artistName);
+    const finalQuery = encodeURIComponent(
+      `track:${trackName} artist:${artistName}`
+    );
+
+    console.log(finalQuery);
+
+    // call api lol
+    const response = await axios({
+      method: 'get',
+      url: `https://api.spotify.com/v1/search?q=${finalQuery}&type=track&limit=5`,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Check for next object, if here call again
+    if (!response.data) {
+      log('searchForItem', 'no data received');
+      return;
+    }
+
+    console.log(response.data.tracks);
+
+    const { items } = response.data.tracks;
+
+    return items.pop();
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.log(`[getAllPlaylists] ${JSON.stringify(error.response.data)}`);
     } else {
       console.log(error);
     }
