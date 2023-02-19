@@ -25,32 +25,22 @@ const createPlaylist = async (req, res) => {
 
     // call openai
     // generate playlist description + name
-    // const playlistInfo = await createPlaylistInfoFromGPT3(body.description);
-    const playlistInfo =
-      'Singles Soiree_A happy and exciting playlist for celebrating Valentines Day with your single friends!';
+    const playlistInfo = await createPlaylistInfoFromGPT3(body.description);
+    // const playlistInfo =
+    //   'Singles Soiree_A happy and exciting playlist for celebrating Valentines Day with your single friends!';
     const playlistInfoSplit = playlistInfo.split('_');
     const playlistTitle = playlistInfoSplit[0];
     const playlistDescription = playlistInfoSplit[1];
     log('createPlaylist', playlistTitle, playlistDescription);
 
-    // const playlistItems = await createPlaylistFromGPT3(body.description);
-    const playlistItems = [
-      "1. Can't Stop the Feeling_Justin Timberlake",
-      '2. I Wanna Dance With Somebody_Whitney Houston',
-      '3. Dynamite_Taio Cruz',
-      '4. Love Myself_Hailee Steinfeld',
-      '5. Single Ladies (Put a Ring On It)_Beyoncé',
-      "1. Can't Stop the Feeling_Justin Timberlake",
-      '2. I Wanna Dance With Somebody_Whitney Houston',
-      '3. Dynamite_Taio Cruz',
-      '4. Love Myself_Hailee Steinfeld',
-      '5. Single Ladies (Put a Ring On It)_Beyoncé',
-      "1. Can't Stop the Feeling_Justin Timberlake",
-      '2. I Wanna Dance With Somebody_Whitney Houston',
-      '3. Dynamite_Taio Cruz',
-      '4. Love Myself_Hailee Steinfeld',
-      '5. Single Ladies (Put a Ring On It)_Beyoncé',
-    ];
+    const playlistItems = await createPlaylistFromGPT3(body.description);
+    // const playlistItems = [
+    //   "1. Can't Stop the Feeling_Justin Timberlake",
+    //   '2. I Wanna Dance With Somebody_Whitney Houston',
+    //   '3. Dynamite_Taio Cruz',
+    //   '4. Love Myself_Hailee Steinfeld',
+    //   '5. Single Ladies (Put a Ring On It)_Beyoncé',
+    // ];
     log('createPlaylist', playlistItems);
 
     // search for items on spotify
@@ -69,6 +59,7 @@ const createPlaylist = async (req, res) => {
 
       const {
         id: spotifyTrackId,
+        uri,
         external_urls: { spotify: trackLink },
         name,
         preview_url: previewUrl,
@@ -79,6 +70,7 @@ const createPlaylist = async (req, res) => {
 
       tracks.push({
         spotifyTrackId,
+        uri,
         trackLink,
         name,
         previewUrl,

@@ -42,7 +42,7 @@ export const runGPT3Analysis = async (input, isFinal) => {
 
 export const createPlaylistFromGPT3 = async (description) => {
   // TODO: Change to 15
-  const PLAYLIST_LENGTH = 15;
+  const PLAYLIST_LENGTH = 12;
 
   try {
     const configuration = new Configuration({

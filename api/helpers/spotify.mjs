@@ -220,16 +220,16 @@ export const searchForItem = async (query) => {
     const trackName = querySplit[0];
     const artistName = querySplit[1];
     console.log(trackName, artistName);
-    const finalQuery = encodeURIComponent(
-      `track:${trackName} artist:${artistName}`
-    );
+
+    // we are going to just search for track name, then filter by popularity on spotify for now. See how ppl like it
+    const finalQuery = encodeURIComponent(`track:${trackName}}`);
 
     console.log(finalQuery);
 
     // call api lol
     const response = await axios({
       method: 'get',
-      url: `https://api.spotify.com/v1/search?q=${finalQuery}&type=track&limit=5`,
+      url: `https://api.spotify.com/v1/search?q=${finalQuery}&type=track&limit=10`,
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
@@ -242,9 +242,10 @@ export const searchForItem = async (query) => {
       return;
     }
 
-    console.log(response.data.tracks);
-
     const { items } = response.data.tracks;
+
+    // sort by popoularity
+    items.sort((a, b) => a.popularity - b.popularity);
 
     return items.pop();
   } catch (error) {
