@@ -8,7 +8,7 @@ dotenv.config();
 //-- Holds all of our helper functions for Spotify --//
 const BASE_URI = 'https://api.spotify.com/v1';
 
-const getAccessToken = async () => {
+export const getAccessToken = async () => {
   try {
     const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = process.env;
     const response = await axios({
@@ -193,64 +193,6 @@ export const getPlaylistItems = async (playlistID) => {
   } catch (error) {
     if (error.response && error.response.data) {
       console.log(`[getPlaylistItems] ${JSON.stringify(error.response.data)}`);
-    } else {
-      console.log(error);
-    }
-  }
-};
-
-export const searchForItem = async (query) => {
-  try {
-    // lets break song title and artist
-    log('searchForItem', query);
-
-    if (!query) {
-      log('searchForItem', 'query not supplied');
-      return;
-    }
-
-    const accessToken = await getAccessToken();
-
-    if (!accessToken) {
-      throw new Error('access token not created');
-      return;
-    }
-
-    const querySplit = query.split('_');
-    const trackName = querySplit[0];
-    const artistName = querySplit[1];
-    console.log(trackName, artistName);
-
-    // we are going to just search for track name, then filter by popularity on spotify for now. See how ppl like it
-    const finalQuery = encodeURIComponent(`track:${trackName}}`);
-
-    console.log(finalQuery);
-
-    // call api lol
-    const response = await axios({
-      method: 'get',
-      url: `https://api.spotify.com/v1/search?q=${finalQuery}&type=track&limit=10`,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    // Check for next object, if here call again
-    if (!response.data) {
-      log('searchForItem', 'no data received');
-      return;
-    }
-
-    const { items } = response.data.tracks;
-
-    // sort by popoularity
-    items.sort((a, b) => a.popularity - b.popularity);
-
-    return items.pop();
-  } catch (error) {
-    if (error.response && error.response.data) {
-      console.log(`[getAllPlaylists] ${JSON.stringify(error.response.data)}`);
     } else {
       console.log(error);
     }
